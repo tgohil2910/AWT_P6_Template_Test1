@@ -1,0 +1,66 @@
+name: React Context & useEffect Autograder
+
+on: [push]
+
+jobs:
+  autograde:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # ============================
+    # ❌ HARD FAIL RULES (0 MARKS)
+    # ============================
+    - name: ❌ Fail if node_modules committed
+      run: |
+        if find . -type d -name "node_modules" | grep -q .; then
+          echo "❌ ERROR: node_modules detected. Use a .gitignore file."
+          exit 1
+        fi
+
+    - name: ❌ Fail if project structure is incorrect
+      run: |
+        if [ ! -f "practical-6-context/src/LanguageContext.js" ] || \
+           [ ! -f "practical-6-context/src/LanguageSwitcher.js" ]; then
+          echo "❌ ERROR: Required files missing in practical-6-context/src/"
+          exit 1
+        fi
+
+    # ============================
+    # 🎯 SCORING SECTION (20 Marks)
+    # ============================
+    - name: Initialize score
+      run: echo "SCORE=0" >> $GITHUB_ENV
+
+    - name: P6 – Environment Setup (4 Marks)
+      run: |
+        cd practical-6-context
+        npm install && echo "SCORE=$((SCORE+4))" >> $GITHUB_ENV
+
+    - name: P6 – Context Provider Logic (6 Marks)
+      run: |
+        if grep -q "createContext(" practical-6-context/src/LanguageContext.js && \
+           grep -q "Provider" practical-6-context/src/LanguageContext.js; then
+          echo "SCORE=$((SCORE+6))" >> $GITHUB_ENV
+        fi
+
+    - name: P6 – useContext Usage (5 Marks)
+      run: |
+        if grep -q "useContext(LanguageContext)" practical-6-context/src/LanguageSwitcher.js; then
+          echo "SCORE=$((SCORE+5))" >> $GITHUB_ENV
+        fi
+
+    - name: P6 – Side Effect & Dependency (5 Marks)
+      run: |
+        if grep -q "useEffect" practical-6-context/src/LanguageSwitcher.js && \
+           grep -q "document.title" practical-6-context/src/LanguageSwitcher.js && \
+           grep -q "\[lang\]" practical-6-context/src/LanguageSwitcher.js; then
+          echo "SCORE=$((SCORE+5))" >> $GITHUB_ENV
+        fi
+
+    - name: Final Result
+      run: |
+        echo "======================================"
+        echo " FINAL SCORE FOR practical-6-context: $SCORE / 20"
+        echo "======================================"
